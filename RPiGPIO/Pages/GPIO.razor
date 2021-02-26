@@ -52,14 +52,16 @@
     {
         foreach (int pin in pins)
         {
-            GpioController.controller.OpenPin(pin);
-            if (GpioController.controller.IsPinOpen(pin))
-            {
-                GpioController.controller.SetPinMode(pin, System.Device.Gpio.PinMode.InputPullDown);
-                GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Rising, PinRising);
-                GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Falling, PinFalling);
-                status = "Pin opened";
+            if (!GpioController.controller.IsPinOpen(pin)) {
+                GpioController.controller.OpenPin(pin);
+                if (GpioController.controller.IsPinOpen(pin))
+                {
+                    GpioController.controller.SetPinMode(pin, System.Device.Gpio.PinMode.InputPullDown);
+                    GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Rising, PinRising);
+                    GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Falling, PinFalling);
+                    status = "Pin opened";
 
+                }
             }
         }
         await InvokeAsync(StateHasChanged);
