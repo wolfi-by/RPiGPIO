@@ -1,0 +1,62 @@
+﻿@page "/gpio"
+@using System.Device.Gpio
+@using RPiGPIO.Data
+@inject GPIOControl GpioController;
+
+
+<h3>GPIO</h3>
+@foreach (var pin in @pins)
+{
+
+    @if (GpioController.controller.IsPinOpen(@pin))
+    {
+        <p>Pin state: @GpioController.controller.Read(@pin), @pin </p>
+    }
+}
+
+<p>@status</p>
+@code {
+    public int PinNumber { get; set; }
+    public string status { get; set; } = "Nothing happened";
+    int[] pins = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        // execute conditionally for loading data, otherwise this will load
+        // every time the page refreshes
+        if (firstRender)
+        {
+            OpenPin();
+        }
+    }
+
+    public async void OpenPin()
+    {
+        foreach (int pin in pins)
+        {
+            GpioController.controller.OpenPin(pin);
+            if (GpioController.controller.IsPinOpen(pin))
+            {
+                GpioController.controller.SetPinMode(pin, System.Device.Gpio.PinMode.InputPullDown);
+                GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Rising, PinRising);
+                GpioController.controller.RegisterCallbackForPinValueChangedEvent(pin, System.Device.Gpio.PinEventTypes.Falling, PinFalling);
+                status = "Pin opened";
+
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void PinRising(object sender, PinValueChangedEventArgs e)
+    {
+        status = $"Rising Edge on Pin {e.PinNumber}";
+
+        await InvokeAsync(StateHasChanged);
+    }
+    private async void PinFalling(object sender, PinValueChangedEventArgs e)
+    {
+        status = $"Falling Edge on Pin {e.PinNumber}";
+        await InvokeAsync(StateHasChanged);
+    }
+}
